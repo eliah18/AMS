@@ -1,0 +1,254 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        .modal-body {
+            max-height: 100%;
+            max-width: 98%;
+        }
+
+        .calculator {
+            margin-top: 15px;
+            background: #ddd;
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 2px 2px 3px rgba( 51, 51, 51, 0.2 );
+        }
+
+            .calculator .calculator-controls {
+                padding-top: 10px;
+                text-align: center;
+            }
+
+                .calculator .calculator-controls .btn {
+                    font-size: 16px;
+                    background: #eee;
+                    margin-bottom: 5px;
+                    display: block;
+                    border: 1px solid #ccc;
+                    box-shadow: 0px 1px 1px rgba( 51, 51, 51, 0.2 );
+                    opacity: .8;
+                    transition: opacity .3s ease;
+                }
+
+                    .calculator .calculator-controls .btn:hover {
+                        opacity: 1;
+                    }
+
+                    .calculator .calculator-controls .btn:active {
+                        box-shadow: none;
+                    }
+
+                    .calculator .calculator-controls .btn.operator {
+                        background: #f1f1f1;
+                        color: #0C7BC5;
+                    }
+
+                    .calculator .calculator-controls .btn.calculate {
+                        background: #0C7BC5;
+                        border: 1px solid #0C7BC5;
+                        color: #fff;
+                    }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2">
+                <div class="calculator">
+                    <input id="inputcalculation" type="text" class="calculator-input form-control" />
+                    <div class="calculator-controls">
+                        <div class="row">
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm">7</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm">8</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm">9</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm operator">+</a></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm">4</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm">5</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm">6</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm operator">-</a></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm">1</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm">2</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm">3</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm operator">*</a></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm">0</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm">.</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm calculate">=</a></div>
+                            <div class="col-xs-3"><a href="#" class="btn btn-sm operator">/</a></div>
+                            <div class="col-xs-3">
+                                <input type="button" id="clear" class="btn btn-sm operator" value="Clear">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+
+
+<script>
+    /**
+ * a calculator function used to create instances of simple math calculators
+ */
+    var Calculator = function (el) {
+        var input, buttons, input1, input2, operator;
+
+
+            // responsible for getting elements and kicking off events
+            function init(el) {
+
+                if (el) {
+
+                    el = $(el);
+                } else {
+
+                    el = $('#calculator');
+                    if (el.length < 1) {
+                        return null;
+                    }
+                }
+
+                // get our input and our buttons
+                input = el.find('.calculator-input');
+                buttons = el.find('a.btn');
+                events();
+            }
+
+            function events() {
+
+                // block user from entering text in input box
+                input.on('keydown', function (e) {
+
+                    // prevent default action
+                    e.preventDefault();
+                });
+
+                // when a button is clicked, cache it and it's value, delegate
+                buttons.on('click', function (e) {
+                    var target = $(this);
+                    var val = target.text();
+
+                    delegate(target, val);
+
+                    // prevent default action
+                    e.preventDefault();
+                });
+            }
+
+            function delegate(target, val) {
+
+                // check to see if we are working with an operator
+                if (target.hasClass('operator')) {
+
+                    // see if the first input is set, if not set it
+                    if (!input1) {
+                        input1 = input.val();
+                    }
+
+                    // if operator is set that means we need to run a calculation
+                    if (operator) {
+
+                        // first set input2
+                        input2 = input.val().split(operator)[1];
+
+                        // run calculation
+                        calculate();
+                    }
+
+                    // set the operator and update the display
+                    operator = val;
+                    updateDisplay(val);
+
+                    // check to see if we are working with the calculate button
+                } else if (target.hasClass('calculate')) {
+
+                    // if both inputs are set, run calculation
+                    if (input1 && input2) {
+
+                        calculate();
+
+                        // else if first input is set and an operator is set
+                    } else if (input1 && operator) {
+
+                        // set second input and calculate
+                        input2 = input.val().split(operator)[1];
+                        calculate();
+                    }
+                } else {
+
+                    // otherwise add the input to the display
+                    updateDisplay(val);
+                }
+            }
+
+            function clearDisplay() {
+
+                // clear the display
+                input.val('');
+
+            }
+
+            function updateDisplay(newValue) {
+
+                // add our new input to the display
+                input.val(input.val() + newValue);
+            }
+        var val ;
+            function calculate() {
+
+                // get value for the input
+                console.log(eval(input1 + operator + input2));
+                val = eval(input1 + operator + input2);
+              
+
+
+                // assign value to input1
+                input1 = val;
+
+                // clear display
+                clearDisplay();
+
+                // update new display
+                updateDisplay(val);
+
+                input2 = null;
+                operator = null;
+        }
+
+
+        document.getElementById('clear').addEventListener('click', function (e)
+        {
+
+            e.preventDefault();
+           
+
+            val = 0;
+            input1 = 0;
+            input2 = 0;
+            document.getElementById('inputcalculation').value = '';
+            console.log(val);
+
+        });
+
+            init(el);
+        
+    };
+
+    var calculator = new Calculator('.calculator');
+</script>

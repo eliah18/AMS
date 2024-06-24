@@ -1,0 +1,1280 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Security;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.VisualBasic;
+using System.Web;
+using System.Web.Services;
+using System.Web.Services.Protocols;
+using System.Web.Script.Services;
+using System.Data.SqlClient;
+using System.Data;
+using System.Configuration;
+// To allow this Web Service to be called from script, using ASP.NET AJAX, uncomment the following line.
+// <System.Web.Script.Services.ScriptService()> _
+[WebService(Namespace = "http://tempuri.org/")]
+[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+//[global::Microsoft.VisualBasic.CompilerServices.DesignerGenerated()]  F.Change
+[ScriptService]
+public class BarGraphData2 : System.Web.Services.WebService
+{
+    //private string cnstr = System.Configuration.ConfigurationManager.AppSettings("connpath");
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string GetRegData()
+    {
+        using (SqlConnection conn = new SqlConnection(ConfigurationManager.ConnectionStrings["conpath"].ConnectionString))
+        {
+            //conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand()) // select 'Total Shareholders' as Category ,count(shareholder) as CountHolders,replace(convert(varchar,convert(Money, count(shareholder)),1),'.00','') as CF,replace(convert(varchar,convert(Money, isnull(sum(shares),0)),1),'.00','') as SS,isnull(sum(shares),0) as Shares,cast((isnull(count(shareholder),0)/@TotalAllCount)*100 as numeric(18,6)) as PercShareholder,(isnull(sum(shares),0)/@TotalAll)*100 as PercShares from master where agm_id=@agm_id AND Shares>0  union 
+            {
+                cmd.CommandText = "DECLARE @Quorum numeric(18,0)=(SELECT top 1 Quorum FROM DBO.udf_GetQuorum()) declare @agm_id numeric(18,0) SET @agm_id =(SELECT top 1 id FROM all_agms WHERE locked=0) declare @TotalAll numeric(18,0) declare @TotalAllCount numeric(18,0) declare @TotalReg numeric(18,0) SET @TotalAll =(select isnull(sum(shares),0) from master where agm_id=@agm_id) SET @TotalAllCount =(select count(shareholder) from master where agm_id=@agm_id and shares>0) select 'Shareholders' as Category,'#000080' as colorA,count(shareholder) as CountHolders,replace(convert(varchar,convert(Money, count(shareholder)),1),'.00','') as CF,replace(convert(varchar,convert(Money, isnull(sum(shares),0)),1),'.00','') as SS,isnull(sum(shares),0) as Shares,cast((isnull(count(shareholder),0)/@TotalAllCount)*100 as numeric(18,6)) as PercShareholder,cast((isnull(sum(shares),0)/@TotalAll)*100 as numeric(36,2)) as PercShares from master where agm_id=@agm_id and registered=1 and Rep_type='SHAREHOLDER' union select 'Proxies' as Category ,'#000080' as colorA,count(shareholder) as CountHolders,replace(convert(varchar,convert(Money, count(shareholder)),1),'.00','') as CF,replace(convert(varchar,convert(Money, isnull(sum(shares),0)),1),'.00','') as SS,isnull(sum(shares),0) as Shares,cast((isnull(count(shareholder),0)/@TotalAllCount)*100 as numeric(18,6)) as PercShareholder,cast((isnull(sum(shares),0)/@TotalAll)*100 as numeric(36,2)) as PercShares from master where agm_id=@agm_id and registered=1 and Rep_type='PROXY' union select 'Non-Holders' as Category,'#000080' as colorA ,count(shareholder) as CountHolders,replace(convert(varchar,convert(Money, count(shareholder)),1),'.00','') as CF,replace(convert(varchar,convert(Money, isnull(sum(shares),0)),1),'.00','') as SS,isnull(sum(shares),0) as Shares,cast(0 as numeric(18,6)) as PercShareholder,0 as PercShares from master where agm_id=@agm_id and registered=1 and Rep_type='NON HOLDER'union select 'Total Attendees' as Category,case when ((isnull(sum(shares),0)/@TotalAll)*100)>=@Quorum then '#F16E20' else '#000080' end as colorA ,count(shareholder) as CountHolders,replace(convert(varchar,convert(Money, count(shareholder)),1),'.00','') as CF,replace(convert(varchar,convert(Money, isnull(sum(shares),0)),1),'.00','') as SS,isnull(sum(shares),0) as Shares,cast((isnull(count(shareholder),0)/@TotalAllCount)*100 as numeric(18,6)) as PercShareholder,cast((isnull(sum(shares),0)/@TotalAll)*100 as numeric(36,2)) as PercShares from master where agm_id=@agm_id and registered=1 --and Rep_type<>'NON HOLDER'";
+                // cmd.CommandText = "declare @agm_id numeric(18,0) SET @agm_id =(SELECT top 1 id FROM all_agms WHERE locked=0) declare @TotalAll numeric(18,0) declare @TotalAllCount numeric(18,0) declare @TotalReg numeric(18,0) SET @TotalAll =(select isnull(sum(shares),0) from master where agm_id=@agm_id) SET @TotalAllCount =(select count(shareholder) from master where agm_id=@agm_id and shares>0) select 'Registered Shareholders' as Category,'#000080' as colorA,count(shareholder) as CountHolders,replace(convert(varchar,convert(Money, count(shareholder)),1),'.00','') as CF,replace(convert(varchar,convert(Money, isnull(sum(shares),0)),1),'.00','') as SS,isnull(sum(shares),0)/1000000 as Shares,cast((isnull(count(shareholder),0)/@TotalAllCount)*100 as numeric(18,6)) as PercShareholder,(isnull(sum(shares),0)/@TotalAll)*100 as PercShares from master where agm_id=@agm_id and registered=1 and Rep_type='SHAREHOLDER' union select 'Registered Proxies' as Category ,'#000080' as colorA,count(shareholder) as CountHolders,replace(convert(varchar,convert(Money, count(shareholder)),1),'.00','') as CF,replace(convert(varchar,convert(Money, isnull(sum(shares),0)),1),'.00','') as SS,isnull(sum(shares),0)/1000000 as Shares,cast((isnull(count(shareholder),0)/@TotalAllCount)*100 as numeric(18,6)) as PercShareholder,(isnull(sum(shares),0)/@TotalAll)*100 as PercShares from master where agm_id=@agm_id and registered=1 and Rep_type='PROXY' union select 'Non Shareholders' as Category,'#000080' as colorA ,count(shareholder) as CountHolders,replace(convert(varchar,convert(Money, count(shareholder)),1),'.00','') as CF,replace(convert(varchar,convert(Money, isnull(sum(shares),0)),1),'.00','') as SS,isnull(sum(shares),0)/1000000 as Shares,cast(0 as numeric(18,6)) as PercShareholder,0 as PercShares from master where agm_id=@agm_id and registered=1 and Rep_type='NON HOLDER'union select 'Total Attendees' as Category,case when ((isnull(sum(shares),0)/@TotalAll)*100)>=75.0 then '#F16E20' else '#000080' end as colorA ,count(shareholder) as CountHolders,replace(convert(varchar,convert(Money, count(shareholder)),1),'.00','') as CF,replace(convert(varchar,convert(Money, isnull(sum(shares),0)),1),'.00','') as SS,isnull(sum(shares),0)/1000000 as Shares,cast((isnull(count(shareholder),0)/@TotalAllCount)*100 as numeric(18,6)) as PercShareholder,(isnull(sum(shares),0)/@TotalAll)*100 as PercShares from master where agm_id=@agm_id and registered=1 --and Rep_type<>'NON HOLDER'"
+
+                // cmd.CommandText = "SELECT resolution_no,[DESCRIPTION],ResSwahili FROM resolutions WHERE agm_id IN (SELECT id FROM all_agms WHERE locked=0) ORDER BY resolution_no"
+                cmd.Connection = conn;
+                SqlDataAdapter adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string GetResultsData()
+    {
+        // Dim customers As New List(Of String)()
+        using (SqlConnection conn = new SqlConnection())
+        {
+            //conn.ConnectionString = cnstr; // ConfigurationManager.ConnectionStrings("Constring").ConnectionString
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "declare @agm_id numeric(18,0) SET @agm_id =(SELECT top 1 id FROM all_agms WHERE locked=0) SELECT replace(convert(varchar,convert(Money, sharesFor),1),'.00','') as SF,replace(convert(varchar,convert(Money, sharesAgainst),1),'.00','') as SA,replace(convert(varchar,convert(Money, sharesAbstain),1),'.00','') AS SAB,sharesFor ,sharesAgainst,sharesAbstain,resNum,restext as Resolution,sharesFor as regCount,agmNumber,'#F16E20' as SForColor,'#005AA9' as SAgainstColor,'#4CAF50' as SAbtainColor FROM AGMResultsReport where agmNumber=@agm_id order by resNum";
+                cmd.Connection = conn;
+                SqlDataAdapter adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string GetQuorumDetails()
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            //conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "SELECT * FROM [dbo].[udf_CurrentGetQuorum]()";
+                cmd.Connection = conn;
+                SqlDataAdapter adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string ActionResolution(string SEQ)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            //conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "IF EXISTS (SELECT * FROM Resolutions WHERE SEQ='" + SEQ + "' AND ISNULL(AtivateVoting,0)=0) BEGIN UPDATE Resolutions SET AtivateVoting=1 WHERE SEQ='" + SEQ + "' END ELSE BEGIN UPDATE Resolutions SET AtivateVoting=0 WHERE SEQ='" + SEQ + "' END SELECT case isnull(AtivateVoting,0) when 0 then 'Activate' else 'De-Activate' end as ResStatus,case isnull(AtivateVoting,0) when 0 then 'danger' else 'success' end as ResStatusColor FROM Resolutions WHERE SEQ='" + SEQ + "'";
+                cmd.Connection = conn;
+                SqlDataAdapter adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    //[WebMethod]
+    //[ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    //public string VoteForRes(string SEQ, string SHAREHOLDER)
+    //{
+    //    using (SqlConnection conn = new SqlConnection())
+    //    {
+    //        //conn.ConnectionString = cnstr;
+    //        using (SqlCommand cmd = new SqlCommand())
+    //        {
+    //            cmd.CommandText = "udf_SendVote";
+    //            cmd.CommandType = CommandType.StoredProcedure;
+    //            cmd.Parameters.AddWithValue("@ResSEQ", SEQ);
+    //            cmd.Parameters.AddWithValue("@ResSHAREHOLDER", SHAREHOLDER);
+    //            cmd.Parameters.AddWithValue("@ResVote", "1");
+    //            cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+    //            cmd.Connection = conn;
+    //            if (conn.State == ConnectionState.Open)
+    //                conn.Close();
+    //            conn.Open();
+    //            cmd.ExecuteNonQuery();
+    //            conn.Close();
+    //            var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+    //            DataTable dt = new DataTable();
+    //            dt.Clear();
+    //            dt.Columns.Add("VoteStatus");
+    //            DataRow _ravi = dt.NewRow();
+    //            _ravi["VoteStatus"] = outputString;
+    //            dt.Rows.Add(_ravi);
+    //            dt.AcceptChanges();
+    //            System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+    //            List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+    //            Dictionary<string, object> row;
+    //            foreach (DataRow dr in dt.Rows)
+    //            {
+    //                row = new Dictionary<string, object>();
+    //                foreach (DataColumn col in dt.Columns)
+    //                    row.Add(col.ColumnName, dr[col]);
+    //                rows.Add(row);
+    //            }
+    //            return serializer.Serialize(rows);
+    //        }
+    //    }
+    //}
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string VoteAgainstRes(string SEQ, string SHAREHOLDER)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "udf_SendVote";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@ResSEQ", SEQ);
+                cmd.Parameters.AddWithValue("@ResSHAREHOLDER", SHAREHOLDER);
+                cmd.Parameters.AddWithValue("@ResVote", "2");
+                cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["VoteStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string VoteAbstainRes(string SEQ, string SHAREHOLDER)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "udf_SendVote";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@ResSEQ", SEQ);
+                cmd.Parameters.AddWithValue("@ResSHAREHOLDER", SHAREHOLDER);
+                cmd.Parameters.AddWithValue("@ResVote", "3");
+                cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["VoteStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string getZoommetingDetails()
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "DECLARE @meetingID numeric(18,0) SET @meetingID=(SELECT TOP 1 A.id FROM all_agms A WHERE A.locked=0) SELECT TOP 2 B.* FROM MeetingIDs B WHERE B.agmID=@meetingID ORDER BY ID DESC";
+                cmd.Connection = conn;
+                var adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string getResProxyVoting(string SessUser, string SEQQ)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "DECLARE @ProxyUserid nvarchar(500) ='" + SessUser + "' DECLARE @RESSEQ nvarchar(500) ='" + SEQQ + "' declare @agm_id numeric(18,0)=(select TOP 1 h.id from all_agms h where h.locked=0) select W.*,a.*,isnull(b.Vote,0) as myVote from (SELECT T.shareholder,T.surname,T.agm_id,T.shares,T.tid FROM [master] T WHERE T.ProxyUserid=@ProxyUserid)W JOIN ( SELECT resolution_no,SEQ,case isnull(AtivateVoting,0) when 0 then 'Activate' else 'De-Activate' end as ResStatus,case isnull(AtivateVoting,0) when 0 then 'danger' else 'success' end as ResStatusColor,agm_id,Votecategory FROM resolutions WHERE agm_id =@agm_id )A ON convert(nvarchar,A.agm_id)=convert(nvarchar,W.agm_id) LEFT OUTER JOIN (SELECT H.AgmNum,h.ResNum,h.ShareholderNum,h.Vote FROM Voters H) B on a.resolution_no=B.ResNum and convert(nvarchar,a.agm_id)=b.AgmNum  AND  B.ShareholderNum=convert(nvarchar,W.shareholder) WHERE convert(nvarchar,A.SEQ)=@RESSEQ ORDER BY W.shares DESC";
+                cmd.CommandType = CommandType.Text;
+                cmd.Connection = conn;
+                var adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    // proxy voting
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string VoteForProxyRes(string SEQ, string SHAREHOLDER)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "udf_SendProxyVote";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@ResSEQ", SEQ);
+                cmd.Parameters.AddWithValue("@ResSHAREHOLDER", SHAREHOLDER);
+                cmd.Parameters.AddWithValue("@ResVote", "1");
+                cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["VoteStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string VoteAgainstProxyRes(string SEQ, string SHAREHOLDER)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "udf_SendProxyVote";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@ResSEQ", SEQ);
+                cmd.Parameters.AddWithValue("@ResSHAREHOLDER", SHAREHOLDER);
+                cmd.Parameters.AddWithValue("@ResVote", "2");
+                cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["VoteStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string VoteAbstainProxyRes(string SEQ, string SHAREHOLDER)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "udf_SendProxyVote";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@ResSEQ", SEQ);
+                cmd.Parameters.AddWithValue("@ResSHAREHOLDER", SHAREHOLDER);
+                cmd.Parameters.AddWithValue("@ResVote", "3");
+                cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["VoteStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string getLatestLiveFeeds()
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "declare @agm_id numeric(18,0)=(select TOP 1 h.id from all_agms h where h.locked=0) select W.*,FORMAT(W.[TimeStamp],'HH:mm:ss tt','en-us') as feedTm from LiveFeeds W WHERE agm_id=@agm_id ORDER BY W.[TimeStamp] DESC";
+                cmd.CommandType = CommandType.Text;
+                cmd.Connection = conn;
+                var adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod()]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string getQuestions()
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "select Question as question,[User] as username from questions";
+                cmd.CommandType = CommandType.Text;
+                cmd.Connection = conn;
+                var adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string SendLiveFeed(string MYFEED)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "udf_SendmyFeed";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@myFeed", MYFEED);
+                cmd.Parameters.Add("@myFeedStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@myFeedStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("myFeedStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["myFeedStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod()]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string SaveQuestion(string UsernameF, string Question)
+    {
+        try
+        {
+            using (SqlConnection conn = new SqlConnection())
+            {
+                conn.ConnectionString = cnstr;
+                using (SqlCommand cmd = new SqlCommand())
+                {
+                    cmd.CommandText = "IF NOT EXISTS(SELECT * FROM Questions WHERE Question=@Question AND [User]=@Username) BEGIN INSERT INTO Questions(Question,[User]) VALUES(@Question, @Username) END";
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@Question", Question);
+                    cmd.Parameters.AddWithValue("@Username", UsernameF);
+                    cmd.Connection = conn;
+                    if (conn.State == ConnectionState.Open)
+                        conn.Close();
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                    conn.Close();
+                    var outputString = "Question Posted Successfully";
+                    DataTable dt = new DataTable();
+                    dt.Clear();
+                    dt.Columns.Add("myFeedStatus");
+                    DataRow _ravi = dt.NewRow();
+                    _ravi["myFeedStatus"] = outputString;
+                    dt.Rows.Add(_ravi);
+                    dt.AcceptChanges();
+                    System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                    List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                    Dictionary<string, object> row;
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        row = new Dictionary<string, object>();
+                        foreach (DataColumn col in dt.Columns)
+                            row.Add(col.ColumnName, dr[col]);
+                        rows.Add(row);
+                    }
+                    return serializer.Serialize(rows);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLogging.WriteLogFile("", "", ex.ToString());
+            return "";
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string VoteAbstainProxyResALL(string SEQQ, string PROXYY)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "udf_SendProxyVoteALL";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@ResSEQ", SEQQ);
+                cmd.Parameters.AddWithValue("@ResPROXY", PROXYY);
+                cmd.Parameters.AddWithValue("@ResVote", "3");
+                cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["VoteStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string VoteAgainstProxyResALL(string SEQQ, string PROXYY)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "udf_SendProxyVoteALL";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@ResSEQ", SEQQ);
+                cmd.Parameters.AddWithValue("@ResPROXY", PROXYY);
+                cmd.Parameters.AddWithValue("@ResVote", "2");
+                cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["VoteStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string VoteForProxyResALL(string SEQQ, string PROXYY)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "udf_SendProxyVoteALL";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@ResSEQ", SEQQ);
+                cmd.Parameters.AddWithValue("@ResPROXY", PROXYY);
+                cmd.Parameters.AddWithValue("@ResVote", "1");
+                cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["VoteStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string getResolutionsAll(string SessUSERNAME, string SessUSERROLE)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                string strQUERY = "";
+                if (SessUSERROLE.ToUpper() == "ADMIN")
+                    strQUERY = "declare @holderNo nvarchar(500)='" + getLoggedINShareholderNumberToVote(SessUSERNAME) + "' declare @agm_id numeric(18,0)=(select TOP 1 h.id from all_agms h where h.locked=0) select a.*,isnull(b.Vote,0) as myVote from ( SELECT resolution_no,[DESCRIPTION] as ResEnglish,SEQ,case isnull(AtivateVoting,0) when 0 then 'Activate' else 'De-Activate' end as ResStatus,case isnull(AtivateVoting,0) when 0 then 'dangerECO' else 'successECO' end as ResStatusColor,agm_id FROM resolutions WHERE agm_id =@agm_id )A LEFT OUTER JOIN (SELECT H.AgmNum,h.ResNum,h.ShareholderNum,h.Vote FROM Voters H WHERE H.ShareholderNum=@holderNo) B on a.resolution_no=B.ResNum and convert(nvarchar,a.agm_id)=b.AgmNum  ORDER BY a.SEQ";
+                else
+                    strQUERY = "declare @holderNo nvarchar(500)='" + getLoggedINShareholderNumberToVote(SessUSERNAME) + "' declare @agm_id numeric(18,0)=(select TOP 1 h.id from all_agms h where h.locked=0) select a.*,isnull(b.Vote,0) as myVote from ( SELECT resolution_no,[DESCRIPTION] as ResEnglish,SEQ,case isnull(AtivateVoting,0) when 0 then 'Activate' else 'De-Activate' end as ResStatus,case isnull(AtivateVoting,0) when 0 then 'dangerECO' else 'successECO' end as ResStatusColor,agm_id FROM resolutions WHERE agm_id =@agm_id AND isnull(AtivateVoting,0)=1)A LEFT OUTER JOIN (SELECT H.AgmNum,h.ResNum,h.ShareholderNum,h.Vote FROM Voters H WHERE H.ShareholderNum=@holderNo) B on a.resolution_no=B.ResNum and convert(nvarchar,a.agm_id)=b.AgmNum  ORDER BY a.SEQ";
+                cmd.CommandText = strQUERY;
+                cmd.CommandType = CommandType.Text;
+                cmd.Connection = conn;
+                var adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                string outputString = "";
+                foreach (DataRow dr in dt.Rows)
+                {
+                    if (SessUSERROLE == "SHAREHOLDER")
+                    {
+                        string myVote = dr.Item["myVote"].ToString();
+                        if (IsElectionResolution(dr.Item["resolution_no"].ToString()) == true)
+                            outputString = outputString + "<tr><td hidden>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["ResEnglish"].ToString() + "</td><td><a id='resForelect_" + dr.Item["SEQ"].ToString() + "' class='btn_ForElection btn btn-info'>Elect</a></td></tr>";
+                        else
+                            outputString = outputString + "<tr><td hidden>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["ResEnglish"].ToString() + "</td><td><a id='resFor_" + dr.Item["SEQ"].ToString() + "' class='btn_For btn btn-info'>For" + Interaction.IIf(myVote == "1", " &#10004", "") + "</a></td><td><a id='resAgainst_" + dr.Item["SEQ"].ToString() + "' class='btn_Against btn btn-warning'>Against" + Interaction.IIf(myVote == "2", " &#10003", "") + "</a></td><td><a id='resAbstain_" + dr.Item["SEQ"].ToString() + "' class='btn_Abstain btn btn-danger'>Abstain" + Interaction.IIf(myVote == "3", " &#10003", "") + "</a></td></tr>";// <td><a id='resAbstain_" & dr.Item("SEQ").ToString & "' class='btn_Abstain btn btn-danger'>Abstain" & IIf(myVote = "3", " &#10003", "") & "</a></td>
+                    }
+                    else if (SessUSERROLE == "ADMIN")
+                        outputString = outputString + "<tr><td hidden>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["ResEnglish"].ToString() + "</td><td><a id='res_" + dr.Item["SEQ"].ToString() + "' class='btn_ActivateVoting btn btn-" + dr.Item["ResStatusColor"].ToString() + "'>" + dr.Item["ResStatus"].ToString() + "</a></td></tr>";
+                    else if (SessUSERROLE == "PROXY")
+                        // If IsElectionResolution(dr.Item("resolution_no").ToString) = True Then
+                        // outputString = outputString & "<tr><td hidden>" & dr.Item("resolution_no").ToString & "</td><td>" & dr.Item("resolution_no").ToString & "</td><td>" & dr.Item("ResEnglish").ToString & "</td><td><a id='resElect_" & dr.Item("SEQ").ToString & "' class='btn_ProxyVotingElect btn btn-danger'>Elect</a></td></tr>"
+                        // Else
+                        outputString = outputString + "<tr><td hidden>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["ResEnglish"].ToString() + "</td><td><a id='res_" + dr.Item["SEQ"].ToString() + "' class='btn_ProxyVoting btn btn-dangerECO'>Vote</a></td></tr>";
+                    else if (SessUSERROLE == "DIRECTOR")
+                        outputString = outputString + "<tr><td hidden>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["ResEnglish"].ToString() + "</td><td><a id='res_" + dr.Item["SEQ"].ToString() + "' class='btn_ProxyVoting btn btn-danger'>Vote</a></td></tr>";
+                    else
+                        outputString = outputString + "<tr><td hidden>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["resolution_no"].ToString() + "</td><td>" + dr.Item["ResEnglish"].ToString() + "</td></tr>";
+                }
+                DataTable dt2 = new DataTable();
+                dt2.Clear();
+                dt2.Columns.Add("returnSTR");
+                DataRow _ravi2 = dt2.NewRow();
+                _ravi2["returnSTR"] = outputString;
+                dt2.Rows.Add(_ravi2);
+                dt2.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt2.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt2.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    public long getLoggedINShareholderNumberToVote(string SessUSERNAME)
+    {
+        try
+        {
+            using (SqlConnection con = new SqlConnection(cnstr))
+            {
+                var cmd = new SqlCommand("SELECT A.* FROM usermanagement A JOIN [master] B ON A.Shareholder=B.shareholder WHERE A.userid='" + SessUSERNAME + "' AND B.agm_id IN (SELECT C.id FROM all_agms C WHERE C.locked=0) AND B.registered=1", con);
+                DataSet ds = new DataSet();
+                var adp = new SqlDataAdapter(cmd);
+                adp.Fill(ds, "SignUps");
+                if (ds.Tables[0].Rows.Count > 0)
+                    return System.Convert.ToInt64(ds.Tables[0].Rows[0].Item["Shareholder"]);
+                else
+                    return 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLogging.WriteLogFile("", "" + "getLoggedINShareholderNumber()", ex.ToString());
+            return 0;
+        }
+    }
+    public bool IsElectionResolution(string resNum)
+    {
+        try
+        {
+            using (SqlConnection con = new SqlConnection(cnstr))
+            {
+                var cmd = new SqlCommand("declare @agm_id numeric(18,0)=(select TOP 1 h.id from all_agms h where h.locked=0) SELECT * FROM resolutions WHERE resolution_no='" + resNum + "' AND agm_id=@agm_id", con);
+                DataSet ds = new DataSet();
+                var adp = new SqlDataAdapter(cmd);
+                adp.Fill(ds, "resolutions");
+                if (ds.Tables[0].Rows.Count > 0)
+                {
+                    if (ds.Tables[0].Rows[0].Item["Votecategory"].ToString() == "Election")
+                        return true;
+                    else
+                        return false;
+                }
+                else
+                    return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLogging.WriteLogFile("", "" + "IsElectionResolution()", ex.ToString());
+            return false;
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string getResNomineeVoting(string SessUser, string SEQQ)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "DECLARE @ProxyUserid nvarchar(500) ='" + SessUser + "'  DECLARE @ShareHolderNum nvarchar(500)=(select top 1 y.Shareholder from UserManageMent y where y.UserId=@ProxyUserid) DECLARE @RESSEQ nvarchar(500) ='" + SEQQ + "' declare @agm_id numeric(18,0)=(select TOP 1 h.id from all_agms h where h.locked=0) DECLARE @resNum nvarchar(500)=(select top 1 j.resolution_no from resolutions j where j.agm_id=@agm_id and j.SEQ=@RESSEQ) select W.*,a.*,isnull(b.Vote,0) as myVote from (SELECT T.NomineeName,T.ID,T.OrderNumber,T.MeetingID,T.ResollutionNo FROM Nominee T WHERE T.MeetingID=@agm_id AND T.ResollutionNo=@resNum)W JOIN ( SELECT resolution_no,SEQ,case isnull(AtivateVoting,0) when 0 then 'Activate' else 'De-Activate' end as ResStatus,case isnull(AtivateVoting,0) when 0 then 'danger' else 'success' end as ResStatusColor,agm_id FROM resolutions WHERE agm_id =@agm_id )A ON convert(nvarchar,A.agm_id)=convert(nvarchar,W.MeetingID) AND A.resolution_no=W.ResollutionNo LEFT OUTER JOIN (SELECT H.AgmNum,h.ResNum,h.ShareholderNum,h.Vote FROM VotersNominee H WHERE H.ShareholderNum=@ShareHolderNum) B on a.resolution_no=B.ResNum and convert(nvarchar,a.agm_id)=b.AgmNum AND B.Vote=convert(nvarchar,W.ID) WHERE convert(nvarchar,A.SEQ)=@RESSEQ ORDER BY W.OrderNumber ASC";
+                cmd.CommandType = CommandType.Text;
+                cmd.Connection = conn;
+                var adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    // election voting
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string VoteForProxyResElect(string SEQ, string NOMINEE, string USSR)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                long ResSHAREHOLDER = getLoggedINShareholderNumberToVote(USSR);
+                string MeetingID = getMeetingID();
+                string ResNo = getResnumber(SEQ);
+                string myNomineeorderNumber = getnomineeOrderNo(NOMINEE);
+
+                cmd.CommandText = "udf_SendNomineeVote";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MeetingID", MeetingID);
+                cmd.Parameters.AddWithValue("@ResNo", ResNo);
+                cmd.Parameters.AddWithValue("@ResSHAREHOLDER", ResSHAREHOLDER);
+                cmd.Parameters.AddWithValue("@ResVote", myNomineeorderNumber);
+                cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["VoteStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    public string getResnumber(string resSEQ)
+    {
+        try
+        {
+            using (SqlConnection con = new SqlConnection(cnstr))
+            {
+                var cmd = new SqlCommand("SELECT * FROM resolutions where SEQ='" + resSEQ + "' AND agm_id IN (SELECT C.id FROM all_agms C WHERE C.locked=0)", con);
+                DataSet ds = new DataSet();
+                var adp = new SqlDataAdapter(cmd);
+                adp.Fill(ds, "resolutions");
+                if (ds.Tables[0].Rows.Count > 0)
+                    return ds.Tables[0].Rows[0].Item["resolution_no"].ToString();
+                else
+                    return "";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLogging.WriteLogFile("", "" + "getResnumber()", ex.ToString());
+            return "";
+        }
+    }
+    public string getMeetingID()
+    {
+        try
+        {
+            using (SqlConnection con = new SqlConnection(cnstr))
+            {
+                var cmd = new SqlCommand("SELECT C.id FROM all_agms C WHERE C.locked=0", con);
+                DataSet ds = new DataSet();
+                var adp = new SqlDataAdapter(cmd);
+                adp.Fill(ds, "resolutions");
+                if (ds.Tables[0].Rows.Count > 0)
+                    return ds.Tables[0].Rows[0].Item["id"].ToString();
+                else
+                    return "";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLogging.WriteLogFile("", "" + "getMeetingID()", ex.ToString());
+            return "";
+        }
+    }
+    public string getnomineeOrderNo(string NomineeSEQ)
+    {
+        try
+        {
+            using (SqlConnection con = new SqlConnection(cnstr))
+            {
+                var cmd = new SqlCommand("SELECT * FROM Nominee where ID='" + NomineeSEQ + "' AND MeetingID IN (SELECT C.id FROM all_agms C WHERE C.locked=0)", con);
+                DataSet ds = new DataSet();
+                var adp = new SqlDataAdapter(cmd);
+                adp.Fill(ds, "Nominee");
+                if (ds.Tables[0].Rows.Count > 0)
+                    return ds.Tables[0].Rows[0].Item["OrderNumber"].ToString();
+                else
+                    return "";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLogging.WriteLogFile("", "" + "getnomineeOrderNo()", ex.ToString());
+            return "";
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string getLatestAgenda()
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "declare @agm_id numeric(18,0)=(select TOP 1 h.id from all_agms h where h.locked=0) select ROW_NUMBER() OVER(ORDER BY W.ID) AS SerialNo,W.*,FORMAT(W.[TimeStamp],'HH:mm:ss tt','en-us') as feedTm from AgendaItems W WHERE agm_id=@agm_id ORDER BY W.[ID] ASC";
+                cmd.CommandType = CommandType.Text;
+                cmd.Connection = conn;
+                var adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(UseHttpGet = true, ResponseFormat = ResponseFormat.Json)]
+    public string getmyResText(string SEQ)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "declare @agm_id numeric(18,0)=(select TOP 1 h.id from all_agms h where h.locked=0) SELECT TOP 1 @VoteStatus=D.[description] FROM resolutions D WHERE D.agm_id =@agm_id and D.SEQ=@RESSEQ";
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@RESSEQ", SEQ);
+                cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["VoteStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string getResNomineeVotingE(string SessUser, string SEQQ)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "DECLARE @ProxyUserid nvarchar(500) ='" + SessUser + "' DECLARE @RESSEQ nvarchar(500) ='" + SEQQ + "' declare @agm_id numeric(18,0)=(select TOP 1 h.id from all_agms h where h.locked=0) DECLARE @resNum nvarchar(500)=(select top 1 j.resolution_no from resolutions j where j.agm_id=@agm_id and j.SEQ=@RESSEQ) select W.*,a.*,'0' as myVote from (SELECT T.NomineeName,T.ID,T.OrderNumber,T.MeetingID,T.ResollutionNo FROM Nominee T WHERE T.MeetingID=@agm_id AND T.ResollutionNo=@resNum)W JOIN ( SELECT resolution_no,SEQ,case isnull(AtivateVoting,0) when 0 then 'Activate' else 'De-Activate' end as ResStatus,case isnull(AtivateVoting,0) when 0 then 'danger' else 'success' end as ResStatusColor,agm_id FROM resolutions WHERE agm_id =@agm_id )A ON convert(nvarchar,A.agm_id)=convert(nvarchar,W.MeetingID) AND A.resolution_no=W.ResollutionNo WHERE convert(nvarchar,A.SEQ)=@RESSEQ ORDER BY W.OrderNumber ASC";
+                cmd.CommandType = CommandType.Text;
+                cmd.Connection = conn;
+                var adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string VoteForProxyResElectALL(string SEQ, string NOMINEE, string USSR)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                DataSet dssDefaults = getProxyDset(USSR);
+                DataTable dt = new DataTable();
+                dt.Clear();
+                string finalResponse = "";
+                string AllResponse = "";
+                if (dssDefaults.Tables[0].Rows.Count > 0)
+                {
+                    foreach (DataRow dr in dssDefaults.Tables[0].Rows)
+                    {
+                        SqlCommand cmdfinal = new SqlCommand();
+                        long ResSHAREHOLDER = System.Convert.ToInt64(dr.Item["Shareholder"]);
+                        string MeetingID = getMeetingID();
+                        string ResNo = getResnumber(SEQ);
+                        string myNomineeorderNumber = getnomineeOrderNo(NOMINEE);
+                        cmdfinal.CommandText = "udf_SendNomineeVote";
+                        cmdfinal.CommandType = CommandType.StoredProcedure;
+                        cmdfinal.Parameters.AddWithValue("@MeetingID", MeetingID);
+                        cmdfinal.Parameters.AddWithValue("@ResNo", ResNo);
+                        cmdfinal.Parameters.AddWithValue("@ResSHAREHOLDER", ResSHAREHOLDER);
+                        cmdfinal.Parameters.AddWithValue("@ResVote", myNomineeorderNumber);
+                        cmdfinal.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                        cmdfinal.Connection = conn;
+                        if (conn.State == ConnectionState.Open)
+                            conn.Close();
+                        conn.Open();
+                        cmdfinal.ExecuteNonQuery();
+                        conn.Close();
+                        var outputString = cmdfinal.Parameters["@VoteStatus"].Value.ToString();
+                        AllResponse = AllResponse + " " + outputString;
+                        finalResponse = outputString;
+                    }
+                }
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                if (AllResponse.Contains("Voted Successfully") == true)
+                    _ravi["VoteStatus"] = "Voted Successfully";
+                else
+                    _ravi["VoteStatus"] = finalResponse;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    public DataSet getProxyDset(string ProxyUserID)
+    {
+        try
+        {
+            using (SqlConnection con = new SqlConnection(cnstr))
+            {
+                var cmd = new SqlCommand("SELECT * FROM [master] where ProxyUserid='" + ProxyUserID + "' AND agm_id IN (SELECT C.id FROM all_agms C WHERE C.locked=0)", con);
+                DataSet ds = new DataSet();
+                var adp = new SqlDataAdapter(cmd);
+                adp.Fill(ds, "masterq");
+                if (ds.Tables[0].Rows.Count > 0)
+                    return ds;
+                else
+                    return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLogging.WriteLogFile("", "" + "getProxyDset()", ex.ToString());
+            return null;
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string getResNomineeVotingEONEBYONE(string SessUser, string SEQQ, string SHAREHOLDER)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                cmd.CommandText = "DECLARE @ProxyUserid nvarchar(500) ='" + SessUser + "'  DECLARE @ShareHolderNum nvarchar(500)=(select top 1 t.shareholder from [master] t where t.tid='" + SHAREHOLDER + "')  DECLARE @RESSEQ nvarchar(500) ='" + SEQQ + "'  declare @agm_id numeric(18,0)=(select TOP 1 h.id from all_agms h where h.locked=0)  DECLARE @resNum nvarchar(500)=(select top 1 j.resolution_no from resolutions j where j.agm_id=@agm_id and j.SEQ=@RESSEQ) select W.*,a.*,isnull(b.Vote,0) as myVote from (SELECT T.NomineeName,T.ID,T.OrderNumber,T.MeetingID,T.ResollutionNo FROM Nominee T WHERE T.MeetingID=@agm_id AND T.ResollutionNo=@resNum)W JOIN ( SELECT resolution_no,SEQ,case isnull(AtivateVoting,0) when 0 then 'Activate' else 'De-Activate' end as ResStatus,case isnull(AtivateVoting,0) when 0 then 'danger' else 'success' end as ResStatusColor,agm_id FROM resolutions WHERE agm_id =@agm_id )A ON convert(nvarchar,A.agm_id)=convert(nvarchar,W.MeetingID) AND A.resolution_no=W.ResollutionNo LEFT OUTER JOIN (SELECT H.AgmNum,h.ResNum,h.ShareholderNum,h.Vote FROM VotersNominee H WHERE H.ShareholderNum=@ShareHolderNum) B on a.resolution_no=B.ResNum and convert(nvarchar,a.agm_id)=b.AgmNum AND B.Vote=convert(nvarchar,W.ID) WHERE convert(nvarchar,A.SEQ)=@RESSEQ ORDER BY W.OrderNumber ASC";
+                cmd.CommandType = CommandType.Text;
+                cmd.Connection = conn;
+                var adp = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                adp.Fill(dt);
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    [WebMethod]
+    [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+    public string VoteForProxyResElectOneByOne(string SEQ, string NOMINEE, string USSR, string HOLDER)
+    {
+        using (SqlConnection conn = new SqlConnection())
+        {
+            conn.ConnectionString = cnstr;
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                long ResSHAREHOLDER = getShareholderNumberPR(USSR, HOLDER);
+                string MeetingID = getMeetingID();
+                string ResNo = getResnumber(SEQ);
+                string myNomineeorderNumber = getnomineeOrderNo(NOMINEE);
+
+                cmd.CommandText = "udf_SendNomineeVote";
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MeetingID", MeetingID);
+                cmd.Parameters.AddWithValue("@ResNo", ResNo);
+                cmd.Parameters.AddWithValue("@ResSHAREHOLDER", ResSHAREHOLDER);
+                cmd.Parameters.AddWithValue("@ResVote", myNomineeorderNumber);
+                cmd.Parameters.Add("@VoteStatus", SqlDbType.NVarChar, 500).Direction = ParameterDirection.Output;
+                cmd.Connection = conn;
+                if (conn.State == ConnectionState.Open)
+                    conn.Close();
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                conn.Close();
+                var outputString = cmd.Parameters["@VoteStatus"].Value.ToString();
+                DataTable dt = new DataTable();
+                dt.Clear();
+                dt.Columns.Add("VoteStatus");
+                DataRow _ravi = dt.NewRow();
+                _ravi["VoteStatus"] = outputString;
+                dt.Rows.Add(_ravi);
+                dt.AcceptChanges();
+                System.Web.Script.Serialization.JavaScriptSerializer serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
+                List<Dictionary<string, object>> rows = new List<Dictionary<string, object>>();
+                Dictionary<string, object> row;
+                foreach (DataRow dr in dt.Rows)
+                {
+                    row = new Dictionary<string, object>();
+                    foreach (DataColumn col in dt.Columns)
+                        row.Add(col.ColumnName, dr[col]);
+                    rows.Add(row);
+                }
+                return serializer.Serialize(rows);
+            }
+        }
+    }
+    public long getShareholderNumberPR(string SessUSER, string TID)
+    {
+        try
+        {
+            using (SqlConnection con = new SqlConnection(cnstr))
+            {
+                var cmd = new SqlCommand("SELECT A.* FROM [master] A WHERE A.ProxyUserid='" + SessUSER + "' AND A.agm_id IN (SELECT C.id FROM all_agms C WHERE C.locked=0) AND A.tid='" + TID + "'", con);
+                DataSet ds = new DataSet();
+                var adp = new SqlDataAdapter(cmd);
+                adp.Fill(ds, "masterG");
+                if (ds.Tables[0].Rows.Count > 0)
+                    return System.Convert.ToInt64(ds.Tables[0].Rows[0].Item["Shareholder"]);
+                else
+                    return 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLogging.WriteLogFile("", "" + "getShareholderNumberPR()", ex.ToString());
+            return 0;
+        }
+    }
+}

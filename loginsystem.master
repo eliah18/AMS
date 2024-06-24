@@ -1,0 +1,51 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="loginsystem.master.cs" Inherits="loginsystem" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    
+    <head>
+      <title>INVESTMENT CONSULTANCY REPORTING SYSTEM </title>
+      <!-- Meta tags -->
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <meta name="keywords" content="Gaze Sign up & login Form Responsive Widget, Audio and Video players, Login Form Web Template, Flat Pricing Tables, Flat Drop-Downs, Sign-Up Web Templates, Flat Web Templates, Login Sign-up Responsive Web Template, Smartphone Compatible Web Template, Free Web Designs for Nokia, Samsung, LG, Sony Ericsson, Motorola Web Design"
+         />
+      <script>
+         addEventListener("load", function () { setTimeout(hideURLbar, 0); }, false); function hideURLbar() { window.scrollTo(0, 1); }
+      </script>
+      <!-- Meta tags -->
+      <!--stylesheets-->
+      <link href="logincss/css/ribho.css" rel="stylesheet" type="text/css">
+      <!--//style sheet end here-->
+      <link href="//fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700" rel="stylesheet">
+   </head>
+    <asp:ContentPlaceHolder id="head" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div>
+        <div class="mid-class">
+             <div class="art-right-w3ls">
+        <asp:ContentPlaceHolder id="body" runat="server">
+        
+        </asp:ContentPlaceHolder>
+                 </div>
+            <div class="art-left-w3ls">
+            <h1 class="header-w3ls">
+               Investment Consultancy Reporting System
+            </h1>
+         </div>
+            </div>
+    </div>
+    </form>
+     <footer class="bottem-wthree-footer">
+         <p>
+            © 2019 Intellego. All Rights Reserved | Design by EscrowSystems
+           <!-- <a href="http://www.W3Layouts.com" target="_blank">Rakeem Chikudza</a>-->
+         </p>
+      </footer>
+</body>
+</html>
